@@ -15,6 +15,7 @@ const (
 	SteamSpyApiBaseUrl    = "https://steamspy.com/api.php"
 
 	defaultTimeout = time.Second * 10
+	defaultRate    = 4
 )
 
 var (
@@ -28,8 +29,9 @@ type Client struct {
 type OptFunc func(opts *Opts)
 
 type Opts struct {
-	client *http.Client
-	key    string
+	client  *http.Client
+	limiter *rateLimiter
+	key     string
 }
 
 func defaultOpts() Opts {
@@ -37,12 +39,19 @@ func defaultOpts() Opts {
 		client: &http.Client{
 			Timeout: defaultTimeout,
 		},
+		limiter: newRateLimiter(defaultRate),
 	}
 }
 
 func WithKey(key string) OptFunc {
 	return func(opts *Opts) {
 		opts.key = key
+	}
+}
+
+func WithLimiter(rate int) OptFunc {
+	return func(opts *Opts) {
+		opts.limiter = newRateLimiter(rate)
 	}
 }
 
@@ -76,6 +85,8 @@ func (c *Client) get(ctx context.Context, url string, output any, key bool) erro
 	if key && c.key == "" {
 		return ErrNoApiKey
 	}
+
+	c.limiter.wait()
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
