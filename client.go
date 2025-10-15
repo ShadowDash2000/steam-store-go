@@ -13,6 +13,8 @@ const (
 	SteamApiBaseUrl       = "https://api.steampowered.com"
 	SteamShadowApiBaseUrl = "https://store.steampowered.com/api"
 	SteamSpyApiBaseUrl    = "https://steamspy.com/api.php"
+
+	defaultTimeout = time.Second * 10
 )
 
 var (
@@ -26,13 +28,15 @@ type Client struct {
 type OptFunc func(opts *Opts)
 
 type Opts struct {
-	key     string
-	timeout time.Duration
+	client *http.Client
+	key    string
 }
 
 func defaultOpts() Opts {
 	return Opts{
-		timeout: time.Second * 10,
+		client: &http.Client{
+			Timeout: defaultTimeout,
+		},
 	}
 }
 
@@ -42,19 +46,26 @@ func WithKey(key string) OptFunc {
 	}
 }
 
-func WithTimeout(timeout time.Duration) OptFunc {
+func WithTimeout(timeout int) OptFunc {
 	return func(opts *Opts) {
-		opts.timeout = timeout
+		if timeout > 0 {
+			opts.client.Timeout = time.Duration(timeout) * time.Second
+		} else {
+			opts.client.Timeout = defaultTimeout
+		}
 	}
 }
 
-func NewClient(opts ...OptFunc) *Client {
-	o := defaultOpts()
-	for _, opt := range opts {
-		opt(&o)
+func New(opts ...OptFunc) *Client {
+	c := &Client{
+		Opts: defaultOpts(),
 	}
 
-	return &Client{o}
+	for _, opt := range opts {
+		opt(&c.Opts)
+	}
+
+	return c
 }
 
 func (c *Client) SetKey(key string) {
@@ -72,11 +83,7 @@ func (c *Client) get(ctx context.Context, url string, output any, key bool) erro
 	}
 	req = req.WithContext(ctx)
 
-	client := &http.Client{
-		Timeout: time.Second * 10,
-	}
-
-	res, err := client.Do(req)
+	res, err := c.client.Do(req)
 	if err != nil {
 		return err
 	}

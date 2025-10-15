@@ -8,7 +8,6 @@ type App struct {
 }
 
 type AppListQuery struct {
-	key                     string `url:"key"`
 	IfModifiedSince         uint   `url:"if_modified_since,omitempty"`
 	HaveDescriptionLanguage string `url:"have_description_language,omitempty"`
 	IncludeGames            bool   `url:"include_games,omitempty"`
@@ -51,7 +50,7 @@ type AppDetail struct {
 	ExtUserAccountNotice string            `json:"ext_user_account_notice"`
 	Developers           []string          `json:"developers"`
 	Publishers           []string          `json:"publishers"`
-	PackageGroups        []string          `json:"package_groups"`
+	PackageGroups        []PackageGroup    `json:"package_groups"`
 	Platforms            map[string]bool   `json:"platforms"`
 	Metacritic           struct {
 		Score int    `json:"score"`
@@ -59,15 +58,36 @@ type AppDetail struct {
 	} `json:"metacritic"`
 }
 
-type AppDetailsResponse struct {
-	Response map[uint]struct {
-		Success bool `json:"success"`
-		Data    AppDetail
-	} `json:"response"`
+type PackageGroup struct {
+	Name                    string `json:"name"`
+	Title                   string `json:"title"`
+	Description             string `json:"description"`
+	SelectionText           string `json:"selection_text"`
+	SaveText                string `json:"save_text"`
+	DisplayType             int    `json:"display_type"`
+	IsRecurringSubscription string `json:"is_recurring_subscription"`
+	Subs                    []Sub  `json:"subs"`
+}
+
+type Sub struct {
+	PackageId                uint    `json:"packageid"`
+	PercentSavingsText       string  `json:"percent_savings_text"`
+	PercentSavings           float64 `json:"percent_savings"`
+	OptionText               string  `json:"option_text"`
+	OptionDescription        string  `json:"option_description"`
+	CanGetFreeLicense        string  `json:"can_get_free_license"`
+	IsFreeLicense            bool    `json:"is_free_license"`
+	PriceInCentsWithDiscount uint    `json:"price_in_cents_with_discount"`
+}
+
+type AppDetailsResponse map[string]AppDetailEntry
+
+type AppDetailEntry struct {
+	Success bool      `json:"success"`
+	Data    AppDetail `json:"data"`
 }
 
 type TagListQuery struct {
-	key             string `url:"key"`
 	Language        string `url:"language,omitempty"`
 	HaveVersionHash string `url:"have_version_hash,omitempty"`
 }
@@ -75,16 +95,41 @@ type TagListQuery struct {
 type TagListResponse struct {
 	Response struct {
 		VersionHash string `json:"version_hash"`
-		Tags        []struct {
-			TagId uint   `json:"tag_id"`
-			Name  string `json:"name"`
-		} `json:"tags"`
+		Tags        []Tag  `json:"tags"`
 	} `json:"response"`
+}
+
+type Tag struct {
+	TagId uint   `json:"tagid"`
+	Name  string `json:"name"`
 }
 
 type SteamSpyQuery struct {
 	Request string `url:"request"`
 	AppId   uint   `url:"appid"`
+}
+
+type SteamSpyAppDetailsResponseRaw struct {
+	AppId          uint            `json:"appid"`
+	Name           string          `json:"name"`
+	Developer      string          `json:"developer"`
+	Publisher      string          `json:"publisher"`
+	ScoreRank      string          `json:"score_rank"`
+	Positive       uint            `json:"positive"`
+	Negative       uint            `json:"negative"`
+	UserScore      uint            `json:"user_score"`
+	Owners         string          `json:"owners"`
+	AverageForever uint            `json:"average_forever"`
+	Average2Weeks  uint            `json:"average_2weeks"`
+	MedianForever  uint            `json:"median_forever"`
+	Median2Weeks   uint            `json:"median_2weeks"`
+	Price          string          `json:"price"`
+	InitialPrice   string          `json:"initialprice"`
+	Discount       string          `json:"discount"`
+	CCU            uint            `json:"ccu"`
+	Languages      string          `json:"languages"`
+	Genre          string          `json:"genre"`
+	Tags           map[string]uint `json:"tags"`
 }
 
 type SteamSpyAppDetailsResponse struct {
@@ -101,9 +146,9 @@ type SteamSpyAppDetailsResponse struct {
 	Average2Weeks  uint            `json:"average_2weeks"`
 	MedianForever  uint            `json:"median_forever"`
 	Median2Weeks   uint            `json:"median_2weeks"`
-	Price          uint            `json:"price"`
-	InitialPrice   uint            `json:"initialprice"`
-	Discount       uint            `json:"discount"`
+	Price          uint64          `json:"price"`
+	InitialPrice   uint64          `json:"initialprice"`
+	Discount       uint64          `json:"discount"`
 	CCU            uint            `json:"ccu"`
 	Languages      string          `json:"languages"`
 	Genre          string          `json:"genre"`
