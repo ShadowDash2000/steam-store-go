@@ -2,6 +2,9 @@ package steamstore
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -109,5 +112,36 @@ func Test_GetSteamSpyAppDetails(t *testing.T) {
 
 	if res.AppId != 10 {
 		t.Errorf("GetSteamSpyAppDetails() AppId = %v, want %v", res.AppId, 10)
+	}
+}
+
+func Test_GetSteamSpyAppDetails_emptyTags(t *testing.T) {
+	c := New()
+
+	jsonFile, err := os.Open("test_files/steam_spy_app_details_empty_tags.json")
+	if err != nil {
+		t.Fatalf("error opening JSON test file: %v", err)
+	}
+	defer jsonFile.Close()
+
+	mockData, err := io.ReadAll(jsonFile)
+	if err != nil {
+		t.Fatalf("error reading JSON test file: %v", err)
+	}
+
+	rs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(mockData)
+	}))
+	defer rs.Close()
+
+	var res *SteamSpyAppDetailsResponse
+	err = c.get(context.Background(), rs.URL, &res, false)
+	if err != nil {
+		t.Fatalf("GetSteamSpyAppDetails_emptyTags() error = %v", err)
+	}
+
+	if res.AppId != 1620 {
+		t.Errorf("GetSteamSpyAppDetails_emptyTags() AppId = %v, want %v", res.AppId, 1620)
 	}
 }

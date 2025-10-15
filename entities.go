@@ -1,5 +1,10 @@
 package steamstore
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type App struct {
 	AppID             uint   `json:"appid"`
 	Name              string `json:"name"`
@@ -110,24 +115,46 @@ type SteamSpyQuery struct {
 }
 
 type SteamSpyAppDetailsResponse struct {
-	AppId          uint            `json:"appid"`
-	Name           string          `json:"name"`
-	Developer      string          `json:"developer"`
-	Publisher      string          `json:"publisher"`
-	ScoreRank      string          `json:"score_rank"`
-	Positive       uint            `json:"positive"`
-	Negative       uint            `json:"negative"`
-	UserScore      uint            `json:"user_score"`
-	Owners         string          `json:"owners"`
-	AverageForever uint            `json:"average_forever"`
-	Average2Weeks  uint            `json:"average_2weeks"`
-	MedianForever  uint            `json:"median_forever"`
-	Median2Weeks   uint            `json:"median_2weeks"`
-	Price          uint            `json:"price,string"`
-	InitialPrice   uint            `json:"initialprice,string"`
-	Discount       uint            `json:"discount,string"`
-	CCU            uint            `json:"ccu"`
-	Languages      string          `json:"languages"`
-	Genre          string          `json:"genre"`
-	Tags           map[string]uint `json:"tags"`
+	AppId          uint         `json:"appid"`
+	Name           string       `json:"name"`
+	Developer      string       `json:"developer"`
+	Publisher      string       `json:"publisher"`
+	ScoreRank      string       `json:"score_rank"`
+	Positive       uint         `json:"positive"`
+	Negative       uint         `json:"negative"`
+	UserScore      uint         `json:"user_score"`
+	Owners         string       `json:"owners"`
+	AverageForever uint         `json:"average_forever"`
+	Average2Weeks  uint         `json:"average_2weeks"`
+	MedianForever  uint         `json:"median_forever"`
+	Median2Weeks   uint         `json:"median_2weeks"`
+	Price          uint         `json:"price,string"`
+	InitialPrice   uint         `json:"initialprice,string"`
+	Discount       uint         `json:"discount,string"`
+	CCU            uint         `json:"ccu"`
+	Languages      string       `json:"languages"`
+	Genre          string       `json:"genre"`
+	Tags           SteamSpyTags `json:"tags"`
+}
+
+type SteamSpyTags map[string]uint
+
+// UnmarshalJSON Steam Spy API can return an empty array instead of an object
+func (t *SteamSpyTags) UnmarshalJSON(data []byte) error {
+	var obj map[string]uint
+	if err := json.Unmarshal(data, &obj); err == nil {
+		*t = obj
+		return nil
+	}
+
+	var arr []any
+	if err := json.Unmarshal(data, &arr); err == nil {
+		if len(arr) == 0 {
+			*t = SteamSpyTags{}
+			return nil
+		}
+		return fmt.Errorf("SteamSpyTags: expected empty array, got %s", string(data))
+	}
+
+	return fmt.Errorf("SteamSpyTags: unable to unmarshal tags: %s", string(data))
 }
