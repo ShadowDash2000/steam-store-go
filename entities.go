@@ -75,7 +75,7 @@ type Sub struct {
 	PercentSavings           float64 `json:"percent_savings"`
 	OptionText               string  `json:"option_text"`
 	OptionDescription        string  `json:"option_description"`
-	CanGetFreeLicense        string  `json:"can_get_free_license"`
+	CanGetFreeLicense        any     `json:"can_get_free_license"`
 	IsFreeLicense            bool    `json:"is_free_license"`
 	PriceInCentsWithDiscount uint    `json:"price_in_cents_with_discount"`
 }
@@ -109,29 +109,6 @@ type SteamSpyQuery struct {
 	AppId   uint   `url:"appid"`
 }
 
-type SteamSpyAppDetailsResponseRaw struct {
-	AppId          uint            `json:"appid"`
-	Name           string          `json:"name"`
-	Developer      string          `json:"developer"`
-	Publisher      string          `json:"publisher"`
-	ScoreRank      string          `json:"score_rank"`
-	Positive       uint            `json:"positive"`
-	Negative       uint            `json:"negative"`
-	UserScore      uint            `json:"user_score"`
-	Owners         string          `json:"owners"`
-	AverageForever uint            `json:"average_forever"`
-	Average2Weeks  uint            `json:"average_2weeks"`
-	MedianForever  uint            `json:"median_forever"`
-	Median2Weeks   uint            `json:"median_2weeks"`
-	Price          string          `json:"price"`
-	InitialPrice   string          `json:"initialprice"`
-	Discount       string          `json:"discount"`
-	CCU            uint            `json:"ccu"`
-	Languages      string          `json:"languages"`
-	Genre          string          `json:"genre"`
-	Tags           map[string]uint `json:"tags"`
-}
-
 type SteamSpyAppDetailsResponse struct {
 	AppId          uint            `json:"appid"`
 	Name           string          `json:"name"`
@@ -146,9 +123,9 @@ type SteamSpyAppDetailsResponse struct {
 	Average2Weeks  uint            `json:"average_2weeks"`
 	MedianForever  uint            `json:"median_forever"`
 	Median2Weeks   uint            `json:"median_2weeks"`
-	Price          uint64          `json:"price"`
-	InitialPrice   uint64          `json:"initialprice"`
-	Discount       uint64          `json:"discount"`
+	Price          uint            `json:"price,string"`
+	InitialPrice   uint            `json:"initialprice,string"`
+	Discount       uint            `json:"discount,string"`
 	CCU            uint            `json:"ccu"`
 	Languages      string          `json:"languages"`
 	Genre          string          `json:"genre"`

@@ -3,7 +3,6 @@ package steamstore
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/google/go-querystring/query"
 )
@@ -46,56 +45,13 @@ func (c *Client) GetAppDetails(ctx context.Context, appId uint) (AppDetailsRespo
 }
 
 func (c *Client) GetSteamSpyAppDetails(ctx context.Context, appId uint) (*SteamSpyAppDetailsResponse, error) {
-	var resRaw *SteamSpyAppDetailsResponseRaw
+	var res *SteamSpyAppDetailsResponse
 
 	q, _ := query.Values(&SteamSpyQuery{
 		Request: "appdetails",
 		AppId:   appId,
 	})
-	err := c.get(ctx, SteamSpyApiBaseUrl+"?"+q.Encode(), &resRaw, false)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := c.formatSteamSpyAppDetailsResponse(resRaw)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
-func (c *Client) formatSteamSpyAppDetailsResponse(resRaw *SteamSpyAppDetailsResponseRaw) (*SteamSpyAppDetailsResponse, error) {
-	var err error
-	res := &SteamSpyAppDetailsResponse{
-		AppId:          resRaw.AppId,
-		Name:           resRaw.Name,
-		Developer:      resRaw.Developer,
-		Publisher:      resRaw.Publisher,
-		ScoreRank:      resRaw.ScoreRank,
-		Positive:       resRaw.Positive,
-		Negative:       resRaw.Negative,
-		UserScore:      resRaw.UserScore,
-		Owners:         resRaw.Owners,
-		AverageForever: resRaw.AverageForever,
-		Average2Weeks:  resRaw.Average2Weeks,
-		MedianForever:  resRaw.MedianForever,
-		Median2Weeks:   resRaw.Median2Weeks,
-		CCU:            resRaw.CCU,
-		Languages:      resRaw.Languages,
-		Genre:          resRaw.Genre,
-		Tags:           resRaw.Tags,
-	}
-
-	res.Price, err = strconv.ParseUint(resRaw.Price, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	res.InitialPrice, err = strconv.ParseUint(resRaw.InitialPrice, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	res.Discount, err = strconv.ParseUint(resRaw.Discount, 10, 32)
+	err := c.get(ctx, SteamSpyApiBaseUrl+"?"+q.Encode(), &res, false)
 	if err != nil {
 		return nil, err
 	}
