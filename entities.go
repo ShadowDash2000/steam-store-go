@@ -141,6 +141,11 @@ type UintEmptyString uint
 
 // UnmarshalJSON Steam Spy API can return an empty string instead of a number
 func (u *UintEmptyString) UnmarshalJSON(data []byte) error {
+	if string(data) == `""` {
+		*u = 0
+		return nil
+	}
+
 	var num uint
 	if err := json.Unmarshal(data, &num); err == nil {
 		*u = UintEmptyString(num)
