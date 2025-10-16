@@ -116,14 +116,14 @@ type SteamSpyQuery struct {
 
 type SteamSpyAppDetailsResponse struct {
 	AppId          uint         `json:"appid"`
-	Name           string       `json:"name"`
-	Developer      string       `json:"developer"`
-	Publisher      string       `json:"publisher"`
-	ScoreRank      string       `json:"score_rank"`
+	Name           string       `json:"name,omitempty"`
+	Developer      string       `json:"developer,omitempty"`
+	Publisher      string       `json:"publisher,omitempty"`
+	ScoreRank      string       `json:"score_rank,omitempty"`
 	Positive       uint         `json:"positive"`
 	Negative       uint         `json:"negative"`
 	UserScore      uint         `json:"user_score"`
-	Owners         string       `json:"owners"`
+	Owners         string       `json:"owners,omitempty"`
 	AverageForever uint         `json:"average_forever"`
 	Average2Weeks  uint         `json:"average_2weeks"`
 	MedianForever  uint         `json:"median_forever"`
@@ -132,8 +132,8 @@ type SteamSpyAppDetailsResponse struct {
 	InitialPrice   uint         `json:"initialprice,string"`
 	Discount       uint         `json:"discount,string"`
 	CCU            uint         `json:"ccu"`
-	Languages      string       `json:"languages"`
-	Genre          string       `json:"genre"`
+	Languages      string       `json:"languages,omitempty"`
+	Genre          string       `json:"genre,omitempty"`
 	Tags           SteamSpyTags `json:"tags"`
 }
 
