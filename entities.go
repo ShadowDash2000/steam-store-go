@@ -115,26 +115,40 @@ type SteamSpyQuery struct {
 }
 
 type SteamSpyAppDetailsResponse struct {
-	AppId          uint         `json:"appid"`
-	Name           string       `json:"name,omitempty"`
-	Developer      string       `json:"developer,omitempty"`
-	Publisher      string       `json:"publisher,omitempty"`
-	ScoreRank      string       `json:"score_rank,omitempty"`
-	Positive       uint         `json:"positive"`
-	Negative       uint         `json:"negative"`
-	UserScore      uint         `json:"user_score"`
-	Owners         string       `json:"owners,omitempty"`
-	AverageForever uint         `json:"average_forever"`
-	Average2Weeks  uint         `json:"average_2weeks"`
-	MedianForever  uint         `json:"median_forever"`
-	Median2Weeks   uint         `json:"median_2weeks"`
-	Price          uint         `json:"price,string"`
-	InitialPrice   uint         `json:"initialprice,string"`
-	Discount       uint         `json:"discount,string"`
-	CCU            uint         `json:"ccu"`
-	Languages      string       `json:"languages,omitempty"`
-	Genre          string       `json:"genre,omitempty"`
-	Tags           SteamSpyTags `json:"tags"`
+	AppId          uint            `json:"appid"`
+	Name           string          `json:"name,omitempty"`
+	Developer      string          `json:"developer,omitempty"`
+	Publisher      string          `json:"publisher,omitempty"`
+	ScoreRank      UintEmptyString `json:"score_rank"`
+	Positive       UintEmptyString `json:"positive"`
+	Negative       UintEmptyString `json:"negative"`
+	UserScore      UintEmptyString `json:"user_score"`
+	Owners         string          `json:"owners,omitempty"`
+	AverageForever UintEmptyString `json:"average_forever"`
+	Average2Weeks  UintEmptyString `json:"average_2weeks"`
+	MedianForever  UintEmptyString `json:"median_forever"`
+	Median2Weeks   UintEmptyString `json:"median_2weeks"`
+	Price          UintEmptyString `json:"price,string"`
+	InitialPrice   UintEmptyString `json:"initialprice,string"`
+	Discount       UintEmptyString `json:"discount,string"`
+	CCU            UintEmptyString `json:"ccu"`
+	Languages      string          `json:"languages,omitempty"`
+	Genre          string          `json:"genre,omitempty"`
+	Tags           SteamSpyTags    `json:"tags"`
+}
+
+type UintEmptyString uint
+
+// UnmarshalJSON Steam Spy API can return an empty string instead of a number
+func (u *UintEmptyString) UnmarshalJSON(data []byte) error {
+	var num uint
+	if err := json.Unmarshal(data, &num); err == nil {
+		*u = UintEmptyString(num)
+		return nil
+	}
+
+	*u = 0
+	return nil
 }
 
 type SteamSpyTags map[string]uint
