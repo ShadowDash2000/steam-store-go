@@ -12,7 +12,7 @@ func (c *Client) GetAppList(ctx context.Context, opts AppListQuery) (*AppListRes
 
 	q, _ := query.Values(opts)
 	q.Set("key", c.key)
-	err := c.get(ctx, SteamApiBaseUrl+"/IStoreService/GetAppList/v1/?"+q.Encode(), &res, true)
+	_, err := c.get(ctx, SteamApiBaseUrl+"/IStoreService/GetAppList/v1/?"+q.Encode(), &res, true)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (c *Client) GetTagList(ctx context.Context, opts TagListQuery) (*TagListRes
 
 	q, _ := query.Values(opts)
 	q.Set("key", c.key)
-	err := c.get(ctx, SteamApiBaseUrl+"/IStoreService/GetTagList/v1/?"+q.Encode(), &res, true)
+	_, err := c.get(ctx, SteamApiBaseUrl+"/IStoreService/GetTagList/v1/?"+q.Encode(), &res, true)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (c *Client) GetTagList(ctx context.Context, opts TagListQuery) (*TagListRes
 func (c *Client) GetAppDetails(ctx context.Context, appId uint) (AppDetailsResponse, error) {
 	var res AppDetailsResponse
 
-	err := c.get(ctx, fmt.Sprintf(SteamShadowApiBaseUrl+"/appdetails?appids=%d", appId), &res, false)
+	_, err := c.get(ctx, fmt.Sprintf(SteamShadowApiBaseUrl+"/appdetails?appids=%d", appId), &res, false)
 	if err != nil {
 		return nil, err
 	}

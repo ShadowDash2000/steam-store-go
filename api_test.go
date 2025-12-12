@@ -136,7 +136,7 @@ func Test_GetSteamSpyAppDetails_emptyTags(t *testing.T) {
 	defer rs.Close()
 
 	var res *SteamSpyAppDetailsResponse
-	err = c.get(context.Background(), rs.URL, &res, false)
+	_, err = c.get(context.Background(), rs.URL, &res, false)
 	if err != nil {
 		t.Fatalf("GetSteamSpyAppDetails_emptyTags() error = %v", err)
 	}

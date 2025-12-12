@@ -101,9 +101,9 @@ func (c *Client) SetKey(key string) {
 	c.key = key
 }
 
-func (c *Client) get(ctx context.Context, url string, output any, needKey bool) error {
+func (c *Client) get(ctx context.Context, url string, output any, needKey bool) (int, error) {
 	if needKey && c.key == "" {
-		return ErrNoApiKey
+		return 0, ErrNoApiKey
 	}
 
 	req := c.client.R().
@@ -118,12 +118,12 @@ func (c *Client) get(ctx context.Context, url string, output any, needKey bool) 
 
 	res, err := req.Execute(http.MethodGet, url)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if res.IsError() {
-		return errors.New("steam-store.get(): " + res.String())
+		return 0, errors.New("steam-store.get(): " + res.String())
 	}
 
-	return nil
+	return res.StatusCode(), nil
 }

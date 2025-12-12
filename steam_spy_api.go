@@ -2,6 +2,8 @@ package steamstore
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
 	"github.com/google/go-querystring/query"
 )
@@ -13,13 +15,15 @@ func (c *Client) GetSteamSpyAppDetails(ctx context.Context, appId uint) (*SteamS
 		Request: "appdetails",
 		AppId:   appId,
 	})
-	err := c.get(ctx, SteamSpyApiBaseUrl+"?"+q.Encode(), &res, false)
+	_, err := c.get(ctx, SteamSpyApiBaseUrl+"?"+q.Encode(), &res, false)
 	if err != nil {
 		return nil, err
 	}
 
 	return res, nil
 }
+
+var ErrSteamSpyLastPage = errors.New("steam-store: no more pages")
 
 func (c *Client) GetSteamSpyAppsPaginated(ctx context.Context, page uint) (map[string]SteamSpyAppDetailsResponse, error) {
 	var res map[string]SteamSpyAppDetailsResponse
@@ -28,7 +32,10 @@ func (c *Client) GetSteamSpyAppsPaginated(ctx context.Context, page uint) (map[s
 		Request: "all",
 		Page:    page,
 	})
-	if err := c.get(ctx, SteamSpyApiBaseUrl+"?"+q.Encode(), &res, false); err != nil {
+	if statusCode, err := c.get(ctx, SteamSpyApiBaseUrl+"?"+q.Encode(), &res, false); err != nil {
+		if statusCode == http.StatusInternalServerError {
+			return nil, ErrSteamSpyLastPage
+		}
 		return nil, err
 	}
 
