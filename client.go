@@ -2,11 +2,12 @@ package steamstore
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"time"
+
+	"golang.org/x/time/rate"
+	"resty.dev/v3"
 )
 
 const (
@@ -29,17 +30,26 @@ type Client struct {
 type OptFunc func(opts *Opts)
 
 type Opts struct {
-	client  *http.Client
-	limiter *rateLimiter
+	client  *resty.Client
+	limiter *rate.Limiter
 	key     string
 }
 
 func defaultOpts() Opts {
+	limiter := rate.NewLimiter(rate.Every(2*time.Second), defaultRate)
+	cb := resty.NewCircuitBreaker()
+
 	return Opts{
-		client: &http.Client{
-			Timeout: defaultTimeout,
-		},
-		limiter: newRateLimiter(defaultRate),
+		client: resty.New().
+			SetCircuitBreaker(cb).
+			SetTimeout(defaultTimeout).
+			AddRequestMiddleware(func(client *resty.Client, request *resty.Request) error {
+				if err := limiter.Wait(request.Context()); err != nil {
+					return err
+				}
+				return nil
+			}),
+		limiter: limiter,
 	}
 }
 
@@ -49,19 +59,23 @@ func WithKey(key string) OptFunc {
 	}
 }
 
-func WithLimiter(rate int) OptFunc {
+func WithRateLimit(rate rate.Limit) OptFunc {
 	return func(opts *Opts) {
-		opts.limiter = newRateLimiter(rate)
+		opts.limiter.SetLimit(rate)
 	}
 }
 
 func WithTimeout(timeout int) OptFunc {
 	return func(opts *Opts) {
 		if timeout > 0 {
-			opts.client.Timeout = time.Duration(timeout) * time.Second
-		} else {
-			opts.client.Timeout = defaultTimeout
+			opts.client.SetTimeout(time.Duration(timeout) * time.Second)
 		}
+	}
+}
+
+func WithRetryCount(count int) OptFunc {
+	return func(opts *Opts) {
+		opts.client.SetRetryCount(count)
 	}
 }
 
@@ -81,37 +95,27 @@ func (c *Client) SetKey(key string) {
 	c.key = key
 }
 
-func (c *Client) get(ctx context.Context, url string, output any, key bool) error {
-	if key && c.key == "" {
+func (c *Client) get(ctx context.Context, url string, output any, needKey bool) error {
+	if needKey && c.key == "" {
 		return ErrNoApiKey
 	}
 
-	c.limiter.wait()
+	req := c.client.R().
+		SetHeader("Accept", "application/json").
+		SetContext(ctx).
+		SetResult(output)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if needKey {
+		req.SetQueryParam("key", c.key)
+	}
+
+	res, err := req.Execute(http.MethodGet, url)
 	if err != nil {
 		return err
 	}
-	req = req.WithContext(ctx)
 
-	res, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		body, err := io.ReadAll(res.Body)
-		if err != nil {
-			return err
-		}
-
-		return errors.New(string(body))
-	}
-
-	err = json.NewDecoder(res.Body).Decode(&output)
-	if err != nil {
-		return err
+	if res.IsError() {
+		return errors.New("steam-store.get(): " + res.String())
 	}
 
 	return nil
