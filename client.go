@@ -98,6 +98,7 @@ func (c *Client) get(ctx context.Context, url string, output any, key bool) erro
 	if err != nil {
 		return err
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(res.Body)
