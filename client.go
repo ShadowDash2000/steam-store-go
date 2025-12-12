@@ -32,17 +32,15 @@ type OptFunc func(opts *Opts)
 type Opts struct {
 	client  *resty.Client
 	limiter *rate.Limiter
+	timeout time.Duration
 	key     string
 }
 
 func defaultOpts() Opts {
-	limiter := rate.NewLimiter(rate.Every(2*time.Second), defaultRate)
-	cb := resty.NewCircuitBreaker()
+	limiter := rate.NewLimiter(rate.Every(time.Second), defaultRate)
 
 	return Opts{
 		client: resty.New().
-			SetCircuitBreaker(cb).
-			SetTimeout(defaultTimeout).
 			AddRequestMiddleware(func(client *resty.Client, request *resty.Request) error {
 				if err := limiter.Wait(request.Context()); err != nil {
 					return err
@@ -50,6 +48,7 @@ func defaultOpts() Opts {
 				return nil
 			}),
 		limiter: limiter,
+		timeout: defaultTimeout,
 	}
 }
 
@@ -68,7 +67,7 @@ func WithRateLimit(rate rate.Limit) OptFunc {
 func WithTimeout(timeout int) OptFunc {
 	return func(opts *Opts) {
 		if timeout > 0 {
-			opts.client.SetTimeout(time.Duration(timeout) * time.Second)
+			opts.timeout = time.Duration(timeout) * time.Second
 		}
 	}
 }
@@ -103,6 +102,7 @@ func (c *Client) get(ctx context.Context, url string, output any, needKey bool) 
 	req := c.client.R().
 		SetHeader("Accept", "application/json").
 		SetContext(ctx).
+		SetTimeout(c.timeout).
 		SetResult(output)
 
 	if needKey {
