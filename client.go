@@ -59,9 +59,9 @@ func WithKey(key string) OptFunc {
 	}
 }
 
-func WithRateLimit(rate rate.Limit) OptFunc {
+func WithRateLimit(limit time.Duration) OptFunc {
 	return func(opts *Opts) {
-		opts.limiter.SetLimit(rate)
+		opts.limiter.SetLimit(rate.Every(limit))
 	}
 }
 
