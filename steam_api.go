@@ -44,51 +44,40 @@ func (c *Client) GetAppDetails(ctx context.Context, appId uint) (AppDetailsRespo
 	return res, nil
 }
 
-func (c *Client) GetSteamSpyAppDetails(ctx context.Context, appId uint) (*SteamSpyAppDetailsResponse, error) {
-	var res *SteamSpyAppDetailsResponse
-
-	q, _ := query.Values(&SteamSpyQuery{
-		Request: "appdetails",
-		AppId:   appId,
-	})
-	err := c.get(ctx, SteamSpyApiBaseUrl+"?"+q.Encode(), &res, false)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
+type GetAllAppsMessage struct {
+	Apps []App
+	Err  error
 }
 
-func (c *Client) GetAllApps(ctx context.Context) chan App {
-	ch := make(chan App)
+func (c *Client) GetAllApps(ctx context.Context, opts AppListQuery) chan GetAllAppsMessage {
+	ch := make(chan GetAllAppsMessage, 1)
 
+	var lastAppId uint
 	go func() {
-		q := AppListQuery{
-			IncludeGames: true,
-			MaxResults:   10000,
-		}
-
 		for {
 			select {
 			case <-ctx.Done():
 				close(ch)
 				return
 			default:
-				res, err := c.GetAppList(ctx, q)
+				if lastAppId > 0 {
+					opts.LastAppId = lastAppId
+				}
+
+				res, err := c.GetAppList(ctx, opts)
 				if err != nil {
+					ch <- GetAllAppsMessage{Err: err}
 					continue
 				}
 
-				for _, app := range res.Response.Apps {
-					ch <- app
-				}
+				ch <- GetAllAppsMessage{Apps: res.Response.Apps}
 
 				if !res.Response.HaveMoreResults {
 					close(ch)
 					return
 				}
 
-				q.LastAppId = res.Response.LastAppId
+				lastAppId = res.Response.LastAppId
 			}
 		}
 	}()

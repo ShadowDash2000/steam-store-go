@@ -111,7 +111,8 @@ type Tag struct {
 
 type SteamSpyQuery struct {
 	Request string `url:"request"`
-	AppId   uint   `url:"appid"`
+	AppId   uint   `url:"appid,omitempty"`
+	Page    uint   `url:"page,omitempty"`
 }
 
 type SteamSpyAppDetailsResponse struct {

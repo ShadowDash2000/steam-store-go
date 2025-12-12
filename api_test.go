@@ -145,3 +145,16 @@ func Test_GetSteamSpyAppDetails_emptyTags(t *testing.T) {
 		t.Errorf("GetSteamSpyAppDetails_emptyTags() AppId = %v, want %v", res.AppId, 1620)
 	}
 }
+
+func Test_GetSteamSpyAppsPaginated(t *testing.T) {
+	c := New()
+
+	res, err := c.GetSteamSpyAppsPaginated(context.TODO(), 0)
+	if err != nil {
+		t.Fatalf("GetSteamSpyAppsPaginated() error = %v", err)
+	}
+
+	if len(res) != 1000 {
+		t.Errorf("GetSteamSpyAppsPaginated() count = %v, want %v", len(res), 1000)
+	}
+}
