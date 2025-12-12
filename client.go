@@ -15,8 +15,9 @@ const (
 	SteamShadowApiBaseUrl = "https://store.steampowered.com/api"
 	SteamSpyApiBaseUrl    = "https://steamspy.com/api.php"
 
-	defaultTimeout = time.Second * 10
-	defaultRate    = 4
+	defaultTimeout   = time.Second * 10
+	defaultRateLimit = time.Second
+	defaultBurst     = 4
 )
 
 var (
@@ -37,7 +38,7 @@ type Opts struct {
 }
 
 func defaultOpts() Opts {
-	limiter := rate.NewLimiter(rate.Every(time.Second), defaultRate)
+	limiter := rate.NewLimiter(rate.Every(defaultRateLimit), defaultBurst)
 
 	return Opts{
 		client: resty.New().
@@ -61,6 +62,12 @@ func WithKey(key string) OptFunc {
 func WithRateLimit(rate rate.Limit) OptFunc {
 	return func(opts *Opts) {
 		opts.limiter.SetLimit(rate)
+	}
+}
+
+func WithBurst(burst int) OptFunc {
+	return func(opts *Opts) {
+		opts.limiter.SetBurst(burst)
 	}
 }
 
