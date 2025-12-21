@@ -97,6 +97,10 @@ func New(opts ...OptFunc) *Client {
 	return c
 }
 
+func (c *Client) Client() *resty.Client {
+	return c.client
+}
+
 func (c *Client) SetKey(key string) {
 	c.key = key
 }
